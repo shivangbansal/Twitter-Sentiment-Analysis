@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>Twitter Sentiment Analysis</title>
+		<meta charset="utf-8" />
+
+		<link rel="shortcut icon" href="{{ url_for('static',filename='App-Twitter-icon.png') }}" />
+
+		<link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/paper/bootstrap.min.css" rel="stylesheet" integrity="sha384-awusxf8AUojygHf2+joICySzB780jVvQaVCAt1clU3QsyAitLGul28Qxb2r1e5g+" crossorigin="anonymous">
+
+
+		<link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Antic'>
+		<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}"/>
+
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+		<script src="https://code.highcharts.com/highcharts.js"></script>
+		<script src="https://code.highcharts.com/highcharts-3d.js"></script>
+		<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+
+	</head>
+	<body>
+
+		<!-- Header -->
+			<section id="header">
+				<div class="inner">
+					<span class="icon major fa-twitter"></span>
+					<h1>Twitter Sentiment Analysis</h1>
+					<p>A model that will determine the tone (neutral, positive, negative) </br>
+					of the tweets belonging to the searched query. </p>
+					<ul class="actions">
+						<form name="myform" action="javascript:handleIt()">
+							<input id="query" class="button1" />
+						</form>
+						<li><a href="#one" id="search" class="button scrolly">Search</a></li>
+					</ul>
+				</div>
+			</section>
+
+
+<!-- <section id="one" class="main style1"> -->
+	<div id = "one" class='container'>
+		<div class='text-center'>
+				<div id="loading">Loading...</div>
+				<div id="container" style="height: 450px; margin: 0 auto"></div>
+				
+		</div>
+		<div id="tweets"></div>
+		<footer class="text-center">
+		</footer>	
+	</div>
+	<script type="text/javascript">
+
+	 var current_data;
+
+		function sentiment_to_color(sentiment){
+			if(sentiment == 'positive') return 'panel-success';
+			else if(sentiment == 'negative') return 'panel-danger';
+			else return 'panel-primary';
+		}
+
+		function load_tweets(querystring){
+			$.ajax({
+			    url: 'tweets',
+			    data: {'query': querystring, 'retweets_only': 'false', 'with_sentiment': 'true'},
+			    dataType: 'json',
+			    type: 'GET',
+			    success: function(data) {
+			    	buildChart(data);
+			    	current_data = data['data'];
+			        var tweets = data['data'];
+			        var container = $('#tweets');
+			        var contents = '';
+			        contents+='<div>'
+			        
+			        for(i = 0; i < tweets.length; i++){
+			        	contents+= '<div class="panel '+ sentiment_to_color(tweets[i].sentiment) +'"> <div class="panel-heading"> <h3 class="panel-title">'+ tweets[i].user +'</h3> </div> <div class="panel-body"><blockquote>'+ tweets[i].text + '</blockquote> </div> </div>'
+			        }
+                    
+                    contents+='</div>';
+			        container.html(contents);
+			        $('#query').val(querystring);
+			        $('#loading').html(data['count'] + " Tweets loaded for "+ querystring.italics() +".");
+			    }
+			});
+		}
+
+		$(document).ready(function(){
+			load_tweets('Deep Learning');
+		});
+
+		function handleIt(){
+			$('#loading').html('Loading...');
+			$('#tweets').html('');
+			load_tweets($('#query').val());
+		};
+
+
+		$('#search').click(function(){
+			$('#loading').html('Loading...');
+			$('#tweets').html('');
+			load_tweets($('#query').val());
+		});
+
+
+	function buildChart(data) {
+    Highcharts.chart('container', {
+        chart: {
+            type: 'pie',
+            options3d: {
+				enabled: true,
+                alpha: 35,
+                beta: 0,
+            }
+        },
+        title: {
+            text: 'Analysis Chart'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: getPercentage(data)
+    });
+}; 
+function getNegativePercentage(data) {
+	var current_data = data['data'];
+	var counter = 0 ;
+	for (var i = current_data.length - 1; i >= 0; i--) {
+		if(current_data[i].sentiment == 'negative') 
+			counter ++;
+	}
+		console.log('negative',counter)
+
+	return counter/data.count;
+}
+function getPositivePercentage(data) {
+	var current_data = data['data'];
+	var counter = 0 ;
+	for (var i = current_data.length - 1; i >= 0; i--) {
+		if(current_data[i].sentiment == 'positive') 
+			counter ++;
+	}
+		console.log('positive',counter)
+
+	return counter/data.count;
+}
+function getNeutralPercentage(data) {
+	var current_data = data['data'];
+	var counter = 0 ;
+	for (var i = current_data.length - 1; i >= 0; i--) {
+		if(current_data[i].sentiment == 'neutral') 
+			counter ++;
+	}
+	console.log('neutral',counter)
+	return counter/data.count;
+}
+function getPercentage(data) {
+	var neutral = getNeutralPercentage(data);
+	var positive = getPositivePercentage(data);
+	var negative = getNegativePercentage(data);
+
+	return [{
+            name: 'Tweets',
+            data: [{
+                name: 'Positive',
+                y: positive, 
+                color: '#00ff00',
+                sliced: true,
+                selected: true
+            }, {
+                name: 'Negative',
+                y: negative,
+                // sliced: true,
+                // selected: true
+                color: 'red'
+            }, {
+                name: 'Neutral',
+                color: '#66b3ff',
+                y: neutral
+            }]
+        }]
+}
+
+	</script>
+
+<!-- </section> -->
+
+
+		<section id="footer">
+			<ul class="icons">
+				<!-- <li><a href="#" class="icon alt fa-twitter"><span class="label">Twitter</span></a></li> -->
+				<li><a href="http://linkedin.com/in/shivangbansal" target="_blank" class="icon alt fa-linkedin"><span class="label">Instagram</span></a></li>
+				<li><a href="https://github.com/shivangbansal" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+				<li><a href="https://www.facebook.com/shivang.bansal2" target="_blank" class="icon alt fa-facebook"><span class="label">Facebook</span></a></li>
+				<li><a href="mailto:shivangbansal1995@gmail.com" class="icon alt fa-envelope"><span class="label">Email</span></a></li>
+			</ul>
+			<ul class="copyright">
+					<li>Shivang Bansal</li><li>2018</li>
+			</ul>
+			
+		</section>
+
+		<!-- Scripts -->
+			<script type="text/javascript" src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
+			<script type="text/javascript" src="{{ url_for('static', filename = 'js/skel.min.js') }}"></script>
+			<script type="text/javascript" src="{{ url_for('static', filename = 'js/jquery.scrolly.min.js') }}"></script>
+			<script type="text/javascript" src="{{ url_for('static', filename = 'js/util.js') }}"></script>
+			<script type="text/javascript" src="{{ url_for('static', filename = 'js/main.js') }}"></script>
+			
+	</body>
+</html>
