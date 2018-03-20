@@ -87,7 +87,7 @@
                     contents+='</div>';
 			        container.html(contents);
 			        $('#query').val(querystring);
-			        $('#loading').html(data['count'] + " Tweets loaded for "+ querystring.italics() +".");
+			        $('#loading').html("Last " + data['count'] + " Tweets loaded on "+ querystring.italics());
 			    }
 			});
 		}
@@ -227,6 +227,6 @@ function getPercentage(data) {
 			<script type="text/javascript" src="{{ url_for('static', filename = 'js/jquery.scrolly.min.js') }}"></script>
 			<script type="text/javascript" src="{{ url_for('static', filename = 'js/util.js') }}"></script>
 			<script type="text/javascript" src="{{ url_for('static', filename = 'js/main.js') }}"></script>
-			
+
 	</body>
 </html>
